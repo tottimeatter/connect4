@@ -1,5 +1,18 @@
 import controlP5.*;
+import ddf.minim.*;
 
+// Control del so
+Minim minim;
+AudioPlayer player;
+AudioSample so_fitxa;
+AudioSample so_empat;
+AudioSample so_final;
+AudioSample so_error;
+
+//Imatges
+PImage background;
+PImage fitxa_grana;
+PImage fitxa_lila;
 
 //Variables gràfiques
 ControlP5 cp5;
@@ -48,8 +61,12 @@ boolean play; //True si s'està executant la partida, altrament fals
 
 //Inicialització de l'aplicació
 void setup(){ 
-  size(1200,600);
+  size(1200,700);
   frameRate(20);
+  background = loadImage("img/background.jpg");
+  fitxa_grana = loadImage("img/Fitxa_grana.png");
+  fitxa_lila = loadImage("img/Fitxa_lila.png");
+  
   titol = "Quatre en ratlla";
   mostra_titol = false;
   mostra_opcions=false;
@@ -62,11 +79,19 @@ void setup(){
   tirades_jugador2 = 0;
 
   play = false;
+  
+  //Inicialització del so
+  minim = new Minim(this);
+  player = minim.loadFile("Blue Boi.mp3");
+  so_fitxa = minim.loadSample("fitxa.mp3");
+  so_empat = minim.loadSample("end.wav");
+  so_final = minim.loadSample("victory.mp3");
+  so_error = minim.loadSample("SD.wav");
 
   //Inicialització d'elements gràfics
   cp5 = new ControlP5(this);
-  inici_button = cp5.addButton("Inici").setPosition(370,80).setSize(125,20).setColorBackground(color(0)).hide();
-  sortir_button = cp5.addButton("Sortir").setPosition(750,80).setSize(125,20).setColorBackground(color(0)).hide();
+  inici_button = cp5.addButton("Inici").setPosition(425,315).setSize(125,20).setColorBackground(color(0)).hide();
+  sortir_button = cp5.addButton("Sortir").setPosition(650,315).setSize(125,20).setColorBackground(color(0)).hide();
   tauler = new int [8][8];
   
   //Inicialització dels colors
@@ -80,10 +105,16 @@ void setup(){
 
 //Loop principal
 void draw(){
-  background(0,0,0);
+  background(background);
   mostraTauler();
   mostraFitxes();
   
+  //Reprodueix la música de fons
+  if(!player.isPlaying()){
+    player.loop();
+  }
+  
+  //Lògica del joc
   if(mostra_titol){
     mostraTitol();
   }
@@ -111,8 +142,9 @@ void draw(){
     } else {
       text = "Empat!!";
     }
-    float y = 600 - textWidth(text)/2;
-    text(text,y,300);
+    textSize(25);
+    float x = 600 - textWidth(text)/2;
+    text(text,x,270);
   }
 }
 
@@ -121,16 +153,15 @@ void movimentFitxa(){
    fitxa_dir_x = mouseX - fitxa_x;
    fitxa_dir_y = mouseY - fitxa_y;
 
-   fitxa_x = fitxa_x + fitxa_dir_x;
-   fitxa_y = fitxa_y + fitxa_dir_y;
+   fitxa_x = fitxa_x + fitxa_dir_x - 35;
+   fitxa_y = fitxa_y + fitxa_dir_y - 35;
    
    stroke(255,255,255);
    if(torn == TORN.JUGADOR1){
-     fill(vermell);
+     image(fitxa_grana, fitxa_x,fitxa_y,70,70);
    } else if (torn == TORN.JUGADOR2) {
-     fill(verd);
+     image(fitxa_lila, fitxa_x,fitxa_y,70,70);
    }
-   ellipse(fitxa_x,fitxa_y,50,50);
 }
 
 //Mostra l'animació inicial del títol
@@ -140,16 +171,26 @@ void mostraTitol(){
   } else if(!play){
     mostra_opcions = true;
   }
+    
     textSize(titol_size);
-    float x = 600 - titol_size*4;
-    fill(255,255,255);
+    float x = 610 - titol_size*4;
+    fill(0,0,0);
     text(titol, x,50);
 }
 
 //Mostra les opcions del menu
 void mostraOpcions(){
-  fill(#FFFFFF);
-  textSize(25);
+  fill(255,255,255,175);
+  stroke(255,255,255,255);
+  rect(400,200,400,200);
+  if(!mostra_resultat){
+    fill(0,0,0);
+    textSize(25);
+    String text = "Menú";
+    float x = 600 - textWidth(text)/2;
+    text(text,x,270);  
+  }
+
   sortir_button.show();
   inici_button.show();
   
@@ -157,8 +198,8 @@ void mostraOpcions(){
 
 // Construeix el tauler de joc
 void mostraTauler(){
-  float x = 380;
-  float y = 150;
+  float x = 300;
+  float y = 75;
   
   for(int i=0;i<8 && i<iteracio_tauler ; i++){
     for(int c=0; c<8 && c<iteracio_tauler;c++){
@@ -166,31 +207,31 @@ void mostraTauler(){
         case 0:
           stroke(#8E8E8E);
           fill(#8E8E8E);
-          rect(x,y,50,50);
+          rect(x,y,70,70);
           break;
         case 1:
           stroke(#8E8E8E);
           fill(#8E8E8E);
-          rect(x,y,50,50);
+          rect(x,y,70,70);
           
           stroke(255,255,255);
           fill(255,0,0);
-          ellipse(x+25,y+25,50,50);
+          image(fitxa_grana,x,y,75,75);
           break;
         case 2: 
           stroke(#8E8E8E);
           fill(#8E8E8E);
-          rect(x,y,50,50);
+          rect(x,y,70,70);
           
           stroke(255,255,255);
           fill(0,255,0);
-          ellipse(x+25,y+25,50,50);
+          image(fitxa_lila,x,y,75,75);
           break;
       }      
-      y+=55;
+      y+=75;
     }
-    y=150;
-    x+=55;
+    y=75;
+    x+=75;
   }
   if(iteracio_tauler < 8){
     iteracio_tauler++;
@@ -203,12 +244,12 @@ void mostraFitxes() {
   fill(255,0,0);
   
   for(int i=0;i<32 - tirades_jugador1 && i<iteracio_fitxes;i++){
-    ellipse(100,75 + i*15,50,50);
+    image(fitxa_grana,75,50 + i*15,75,75);
   }
   
   fill(0,255,0);
   for(int i=0;i<32 - tirades_jugador2 && i<iteracio_fitxes;i++){
-    ellipse(1100,75 + i*15,50,50);
+    image(fitxa_lila, 1050,50 + i*15,75,75);
   }  
   if(iteracio_fitxes >= 32){
     mostra_titol = true;
@@ -229,6 +270,9 @@ public void Inici(int value){
   tirades_jugador1=0;
   tirades_jugador2=0;
   torn = TORN.JUGADOR1;
+  if(player.isMuted()){
+    player.unmute();
+  }
 }
 
 
@@ -237,7 +281,7 @@ void mousePressed(){
   // Si ha començat la partida i el "click" ha estat sobre el tauler
   if(play){
     for(int i = 0; i<=8; i++){
-      if(380 + i*55 < mouseX && mouseX < 435 + i*55){
+      if(300 + i*75 < mouseX && mouseX < 375 + i*75){
         tiraFitxa(i);
       }
     }  
@@ -246,36 +290,37 @@ void mousePressed(){
 
 // Modifica el tauler, si s'escau, amb la nova tirada
 void tiraFitxa(int columna){
-    boolean colocada = false;
-    
-    // Es mira si hi ha alguna fitxa per poder col·locar la següent 
-    for(int j = 0; j < tauler[columna].length; j++){
-      if(j == 7){
-        if(tauler[columna][j] == 0 && torn == TORN.JUGADOR1){
+  boolean colocada = false;
+  
+  // Es mira si hi ha alguna fitxa per poder col·locar la següent 
+  for(int j = 0; j < tauler[columna].length; j++){
+    if(j == 7){
+      if(tauler[columna][j] == 0 && torn == TORN.JUGADOR1){
+        tauler[columna][j] = 1;
+        tirades_jugador1++;
+        colocada = true;
+      } else if(tauler[columna][j] == 0 && torn == TORN.JUGADOR2){
+        tauler[columna][j] = 2;
+        tirades_jugador2++;
+        colocada = true;
+      }
+    } else{
+      if(tauler[columna][j + 1] != 0 && tauler[columna][j] == 0){
+        if(torn == TORN.JUGADOR1){
           tauler[columna][j] = 1;
           tirades_jugador1++;
           colocada = true;
-        } else if(tauler[columna][j] == 0 && torn == TORN.JUGADOR2){
+          break;
+        } else if(torn == TORN.JUGADOR2){
           tauler[columna][j] = 2;
-          tirades_jugador2++;
           colocada = true;
-        }
-      } else{
-        if(tauler[columna][j + 1] != 0 && tauler[columna][j] == 0){
-          if(torn == TORN.JUGADOR1){
-            tauler[columna][j] = 1;
-            tirades_jugador1++;
-            colocada = true;
-            break;
-          } else if(torn == TORN.JUGADOR2){
-            tauler[columna][j] = 2;
-            colocada = true;
-            tirades_jugador2++;
-            break;
-          }
+          tirades_jugador2++;
+          break;
         }
       }
     }
+  }
+  if(colocada){so_fitxa.trigger();} else {so_error.trigger();}
   nextAccio(colocada);
 }
 
@@ -293,17 +338,23 @@ void nextAccio(boolean colocada){
     case 1:
       play = false;
       mostra_resultat = true;
-      println("Victòria de jugador/a " + res + "!!");      
+      println("Victòria de jugador/a " + res + "!!");
+      player.mute();
+      so_final.trigger();
       break;
     case 2:
       play = false;
       mostra_resultat = true;
       println("Victòria de jugador/a " + res + "!!");
+      player.mute();
+      so_final.trigger();
       break;
     case -1:
       play = false;
       mostra_resultat = true;
       println("La partida acaba en empat!");
+      player.mute();
+      so_empat.trigger();
       break;
   }    
 }
